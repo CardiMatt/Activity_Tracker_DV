@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "366869216961",
+    "project_id": "activity-tracker-e2cac",
+    "storage_bucket": "activity-tracker-e2cac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366869216961:android:e28c6e420d7a4291231e40",
+        "android_client_info": {
+          "package_name": "com.example.activity_tracker_dv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSg6IJHqhDJbZ9feXvRjrDuMjdB6Cjo6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366869216961:android:c241273db9be1bfb231e40",
+        "android_client_info": {
+          "package_name": "com.example.activitytracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSg6IJHqhDJbZ9feXvRjrDuMjdB6Cjo6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366869216961:android:34c5221f8bcef19f231e40",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSg6IJHqhDJbZ9feXvRjrDuMjdB6Cjo6Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

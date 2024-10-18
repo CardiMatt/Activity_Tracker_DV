@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/activityFragment">
+
+    <fragment
+        android:id="@+id/activityFragment"
+        android:name="com.example.activity_tracker_dv.home.fragment.ActivityFragment"
+        tools:layout="@layout/fragment_activity" />
+
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.example.activity_tracker_dv.home.fragment.StatisticsFragment"
+        tools:layout="@layout/fragment_statistics" />
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.activity_tracker_dv.home.fragment.SettingsFragment"
+        tools:layout="@layout/fragment_settings" />
+</navigation>
