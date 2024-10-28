@@ -23,12 +23,14 @@ class HomeActivity : AppCompatActivity() {
 
         navView = findViewById(R.id.nav_view)
 
-        // Aggiungi tutti i fragment e nascondi quelli che non devono essere mostrati inizialmente
-        supportFragmentManager.beginTransaction().apply {
-            add(R.id.nav_host_fragment_activity_main, settingsFragment, "3").hide(settingsFragment)
-            add(R.id.nav_host_fragment_activity_main, statisticsFragment, "2").hide(statisticsFragment)
-            add(R.id.nav_host_fragment_activity_main, activityFragment, "1")
-        }.commit()
+        // Verifica se l'attività è stata ricreata e quindi i fragment sono già stati aggiunti
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction().apply {
+                add(R.id.nav_host_fragment_activity_main, settingsFragment, "3").hide(settingsFragment)
+                add(R.id.nav_host_fragment_activity_main, statisticsFragment, "2").hide(statisticsFragment)
+                add(R.id.nav_host_fragment_activity_main, activityFragment, "1")
+            }.commit()
+        }
 
         navView.setOnItemSelectedListener { item ->
             when (item.itemId) {

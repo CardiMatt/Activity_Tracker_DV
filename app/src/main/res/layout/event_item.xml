@@ -10,14 +10,28 @@
         android:id="@+id/eventTypeTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Event Type"
+        android:text="Tipo Attività"
         android:textSize="16sp"
         android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/startTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inizio: "
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/endTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fine: "
+        android:textSize="14sp"/>
 
     <TextView
         android:id="@+id/stepsTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Steps"
+        android:text="Passi: "
         android:textSize="14sp"/>
 </LinearLayout>

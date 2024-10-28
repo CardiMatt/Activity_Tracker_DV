@@ -21,15 +21,12 @@ import com.example.activity_tracker_dv.repository.EventRepository
 import com.example.activity_tracker_dv.viewmodels.EventViewModel
 import com.example.activity_tracker_dv.viewmodels.EventViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 class EventRecognitionReceiver : BroadcastReceiver() {
 
     private var userEmail: String? = null
-    var event: Event? = null
 
     companion object {
         private const val TAG = "EventTransitionReceiver"
@@ -44,7 +41,6 @@ class EventRecognitionReceiver : BroadcastReceiver() {
         var totalDistance = 0.0
         var startTimeMillis: Long = 0
 
-
         fun startActivityTransitionUpdates(context: Context) {
             Log.d(TAG, "startActivityTransitionUpdates called")
 
@@ -53,7 +49,7 @@ class EventRecognitionReceiver : BroadcastReceiver() {
             val factory = EventViewModelFactory(eventRepository)
             eventViewModel = ViewModelProvider(viewModelStore, factory)[EventViewModel::class.java]
 
-            val activityRecognitionClient = ActivityRecognition.getClient(context)
+            activityRecognitionClient = ActivityRecognition.getClient(context)
 
             val transitions = listOf(
                 ActivityTransition.Builder()
@@ -101,7 +97,7 @@ class EventRecognitionReceiver : BroadcastReceiver() {
 
         fun stopActivityTransitionUpdates(context: Context) {
             Log.d(TAG, "stopActivityTransitionUpdates called")
-            val activityRecognitionClient = ActivityRecognition.getClient(context)
+            activityRecognitionClient = ActivityRecognition.getClient(context)
             val intent = Intent(context, EventRecognitionReceiver::class.java)
             val pendingIntent = PendingIntent.getBroadcast(
                 context, 0, intent,
@@ -141,6 +137,11 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                 .setMinUpdateIntervalMillis(2000)
                 .build()
 
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "Permessi mancanti per l'accesso alla posizione.")
+                return
+            }
+
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
         }
 
@@ -168,11 +169,14 @@ class EventRecognitionReceiver : BroadcastReceiver() {
         }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(context: Context, intent: Intent) = runBlocking {
         Log.d(TAG, "onReceive called. Intent ricevuto con azione: ${intent.action}")
         if (userEmail == null) {
-            // Initialize Firebase Auth and get the user email
             userEmail = FirebaseAuth.getInstance().currentUser?.email
+            if (userEmail == null) {
+                Log.e(TAG, "Impossibile recuperare l'email utente.")
+                return@runBlocking
+            }
             Log.d(TAG, "Email utente recuperata: $userEmail")
         }
         if (ActivityTransitionResult.hasResult(intent)) {
@@ -197,21 +201,20 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                     Log.d(TAG, "Inizio attività di $activityName")
                     startTimeMillis = System.currentTimeMillis()
                     Log.d(TAG, "Tempo di inizio registrato: $startTimeMillis")
-                    startLocationUpdates(context)
 
-                    // Initialize Event object
-                    this.event = Event(
-                        userUsername = userEmail!!, // Use Firebase user email as identifier
+                    val newEvent = Event(
+                        userUsername = userEmail ?: "Unknown",
                         eventType = activityName,
                         steps = 0,
                         launch = Date(),
                         end = Date(),
                         startLatitude = lastLocation?.latitude ?: 0.0,
                         startLongitude = lastLocation?.longitude ?: 0.0,
-                        endLatitude = 0.0,  // Will be updated on stop
-                        endLongitude = 0.0  // Will be updated on stop
+                        endLatitude = 0.0,
+                        endLongitude = 0.0
                     )
-                    Log.d(TAG, "Evento inizializzato: $this.event")
+                    eventViewModel.setCurrentEvent(newEvent)
+                    Log.d(TAG, "Evento inizializzato: $newEvent")
 
                 } else if (event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_EXIT) {
                     Log.d(TAG, "Fine attività di $activityName")
@@ -219,19 +222,17 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                     Log.d(TAG, "Tempo di fine registrato: $endTimeMillis")
                     stopLocationUpdates()
 
-                    // Update and save Event object
-                    this.event?.let {
+                    eventViewModel.currentEvent.value?.let {
                         it.end = Date()
                         it.endLatitude = lastLocation?.latitude ?: 0.0
                         it.endLongitude = lastLocation?.longitude ?: 0.0
                         Log.d(TAG, "Evento aggiornato: $it")
-                    }
-                    CoroutineScope(Dispatchers.IO).launch {
-                        val eventToSave = this@EventRecognitionReceiver.event
-                        eventToSave?.let {
-                            var eventId = eventViewModel.insertEvent(it)
-                            Log.d(TAG, "Evento Salvato: $eventId")
-                        }
+
+                        val eventId = eventViewModel.insertEvent(it)
+                        Log.d(TAG, "Evento Salvato: $eventId")
+                        eventViewModel.setCurrentEvent(null)  // Reset currentEvent after saving
+                    } ?: run {
+                        Log.e(TAG, "Tentativo di concludere un'attività non avviata. Evento nullo.")
                     }
                 }
             }
@@ -239,6 +240,5 @@ class EventRecognitionReceiver : BroadcastReceiver() {
             Log.e(TAG, "ActivityTransitionResult non trovato")
         }
         Log.d(TAG, "onReceive - fine elaborazione intent.")
-        TODO("Not yet implemented")
     }
 }
