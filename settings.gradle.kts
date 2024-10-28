@@ -12,12 +12,12 @@ pluginManagement {
     }
 
     plugins {
-        // Add the dependency for the Google services Gradle plugin
         id("com.google.gms.google-services") version "4.4.2" apply false
-
-        id("com.google.dagger.hilt.android") version "2.44" apply false
+        id("com.google.dagger.hilt.android") version "2.48.1" apply false
+        id("com.google.devtools.ksp") version "1.9.0-1.0.13"
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
