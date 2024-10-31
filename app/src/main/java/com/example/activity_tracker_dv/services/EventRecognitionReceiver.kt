@@ -67,7 +67,23 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                 ActivityTransition.Builder()
                     .setActivityType(DetectedActivity.RUNNING)
                     .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
-                    .build()
+                    .build(),
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.ON_BICYCLE)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                    .build(),
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.ON_BICYCLE)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                    .build(),
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.IN_VEHICLE)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                    .build(),
+                ActivityTransition.Builder()
+                    .setActivityType(DetectedActivity.IN_VEHICLE)
+                    .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                    .build(),
             )
 
             val request = ActivityTransitionRequest(transitions)
@@ -186,6 +202,8 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                 val activityName = when (event.activityType) {
                     DetectedActivity.WALKING -> "Camminata"
                     DetectedActivity.RUNNING -> "Corsa"
+                    DetectedActivity.ON_BICYCLE -> "Bicicletta"
+                    DetectedActivity.IN_VEHICLE -> "Automobile"
                     else -> "Sconosciuto"
                 }
 
@@ -205,7 +223,7 @@ class EventRecognitionReceiver : BroadcastReceiver() {
                     val newEvent = Event(
                         userUsername = userEmail ?: "Unknown",
                         eventType = activityName,
-                        steps = 0,
+                        distanceTravelled = 0.0,
                         launch = Date(),
                         end = Date(),
                         startLatitude = lastLocation?.latitude ?: 0.0,
@@ -224,6 +242,7 @@ class EventRecognitionReceiver : BroadcastReceiver() {
 
                     eventViewModel.currentEvent.value?.let {
                         it.end = Date()
+                        it.distanceTravelled = totalDistance
                         it.endLatitude = lastLocation?.latitude ?: 0.0
                         it.endLongitude = lastLocation?.longitude ?: 0.0
                         Log.d(TAG, "Evento aggiornato: $it")

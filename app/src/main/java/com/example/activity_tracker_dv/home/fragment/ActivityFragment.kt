@@ -79,12 +79,12 @@ class ActivityFragment : Fragment() {
                 // Aggiorna l'interfaccia utente con i dati dell'ultimo evento
                 if (events.isNotEmpty()) {
                     val lastEvent = events.last()
-                    activityTextView.text = "Attività: ${lastEvent.eventType}, Passi: ${lastEvent.steps}"
-                    Log.d("ActivityFragment", "Ultimo evento osservato: ${lastEvent.eventType}, Passi: ${lastEvent.steps}")
+                    activityTextView.text = "Attività: ${lastEvent.eventType}, Distanza: ${lastEvent.distanceTravelled} km"
+                    Log.d("ActivityFragment", "Ultimo evento osservato: ${lastEvent.eventType}, Distanza: ${lastEvent.distanceTravelled} km")
 
                     // Aggiorna la lista degli eventi precedenti
                     val eventDescriptions = events.map { event ->
-                        "Attività: ${event.eventType}, Inizio: ${event.launch}, Fine: ${event.end}, Passi: ${event.steps}"
+                        "Attività: ${event.eventType}, Inizio: ${event.launch}, Fine: ${event.end}, Distanza: ${event.distanceTravelled} km"
                     }
                     eventsAdapter.clear()
                     eventsAdapter.addAll(eventDescriptions)

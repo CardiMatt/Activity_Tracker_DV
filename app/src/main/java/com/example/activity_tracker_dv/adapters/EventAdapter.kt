@@ -17,7 +17,7 @@ class EventAdapter(private val events: List<Event>) : RecyclerView.Adapter<Event
         fun bind(event: Event) {
             // Associa i dati dell'evento alle TextView del layout
             eventTypeTextView.text = event.eventType
-            stepsTextView.text = event.steps.toString()
+            stepsTextView.text = event.distanceTravelled.toString()
             // Mostra altre informazioni, ad esempio latitudine e longitudine
         }
     }
