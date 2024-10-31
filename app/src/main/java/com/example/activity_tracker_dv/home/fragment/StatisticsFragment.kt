@@ -153,7 +153,7 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     private fun setupBarChart(events: List<Event>) {
         val activityTimeData = events.groupBy { it.eventType }
             .mapValues { entry ->
-                entry.value.sumOf { TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time).toDouble() }.toFloat()
+                entry.value.sumOf { (TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time) + TimeUnit.MILLISECONDS.toSeconds(it.end.time - it.launch.time) % 60 / 60.0).toDouble() }.toFloat()
             }
         val barEntries = activityTimeData.keys.mapIndexed { index, key -> BarEntry(index.toFloat(), activityTimeData[key] ?: 0f) }
         val barDataSet = BarDataSet(barEntries, "Tempo per Attività").apply {
@@ -198,7 +198,9 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
 
                     val barEntries = filteredEvents.keys.mapIndexed { index, key ->
                         val totalTime = filteredEvents[key]?.sumOf { it.end.time - it.launch.time } ?: 0L
-                        BarEntry(index.toFloat(), TimeUnit.MILLISECONDS.toHours(totalTime).toFloat())
+                        val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(totalTime)
+                        val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(totalTime) % 60
+                        BarEntry(index.toFloat(), totalMinutes + (remainingSeconds / 60.0).toFloat())
                     }
 
                     val barDataSet = BarDataSet(barEntries, "Attività per ${selectedFilter}").apply {
@@ -259,7 +261,7 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                     }
                     val firstEvent = events.first()
                     val firstLatLng = LatLng(firstEvent.startLatitude, firstEvent.startLongitude)
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(firstLatLng, 12f))
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(firstLatLng, 10f))
                 }
             }
         }

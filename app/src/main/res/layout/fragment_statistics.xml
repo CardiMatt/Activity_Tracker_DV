@@ -11,6 +11,11 @@
         android:padding="16dp">
 
         <!-- KPI Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="32dp">
         <TextView
             android:id="@+id/total_distance_kpi"
             android:layout_width="wrap_content"
@@ -34,12 +39,13 @@
             android:text="Total Activities"
             android:textSize="18sp"
             android:layout_marginBottom="16dp" />
+        </LinearLayout>
 
         <!-- Map Section -->
         <com.google.android.gms.maps.MapView
             android:id="@+id/map_view"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="400dp"
             android:layout_marginBottom="16dp" />
 
         <!-- Pie Chart Section -->

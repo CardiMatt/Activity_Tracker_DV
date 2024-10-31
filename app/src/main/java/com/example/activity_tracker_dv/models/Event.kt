@@ -7,13 +7,13 @@ import java.util.Date
 @Entity(tableName = "events")
 data class Event(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val userUsername: String,
-    val eventType: String,
-    var distanceTravelled: Double,
-    val launch: Date,
-    var end: Date,
-    val startLatitude: Double,
-    val startLongitude: Double,
-    var endLatitude: Double,
-    var endLongitude: Double
+    val userUsername: String = "",
+    val eventType: String = "",
+    var distanceTravelled: Double = 0.0,
+    val launch: Date = Date(),
+    var end: Date = Date(),
+    val startLatitude: Double = 0.0,
+    val startLongitude: Double = 0.0,
+    var endLatitude: Double = 0.0,
+    var endLongitude: Double = 0.0
 )

@@ -49,6 +49,11 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <service
+            android:name=".services.ActivityTrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- Firebase configuration (in caso usi Firebase, altrimenti puoi rimuovere) -->
         <meta-data
             android:name="com.google.firebase.analytics.APPLICATION_ID"

@@ -1,5 +1,6 @@
 package com.example.activity_tracker_dv.home.fragment
 
+import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -34,15 +35,22 @@ class ActivityFragment : Fragment() {
     private var rootView: View? = null
 
     // Inizializza il launcher per la richiesta dei permessi
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Log.d("ActivityFragment", "Permessi per la localizzazione concessi.")
+    private val requestMultiplePermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        var allPermissionsGranted = true
+        permissions.entries.forEach {
+            if (!it.value) {
+                allPermissionsGranted = false
+                Log.d("ActivityFragment", "Permesso ${it.key} negato.")
+            }
+        }
+        if (allPermissionsGranted) {
+            Log.d("ActivityFragment", "Tutti i permessi necessari concessi.")
             startTracking()
         } else {
-            Log.d("ActivityFragment", "Permessi per la localizzazione negati.")
-            activityTextView.text = "Permessi per la localizzazione negati."
+            Log.d("ActivityFragment", "Permessi mancanti per il monitoraggio.")
+            activityTextView.text = "Permessi mancanti per il monitoraggio."
         }
     }
 
@@ -98,7 +106,7 @@ class ActivityFragment : Fragment() {
             // Avvia il servizio quando il pulsante di inizio è cliccato
             startButton.setOnClickListener {
                 Log.d("ActivityFragment", "Pulsante Start cliccato.")
-                checkLocationPermissionAndStartTracking()
+                checkPermissionsAndStartTracking()
             }
 
             // Interrompi il servizio quando il pulsante di stop è cliccato
@@ -112,19 +120,36 @@ class ActivityFragment : Fragment() {
         return rootView
     }
 
-    // Controlla i permessi di localizzazione e avvia il tracking
-    private fun checkLocationPermissionAndStartTracking() {
-        Log.d("ActivityFragment", "Controllo dei permessi di localizzazione.")
+    // Controlla i permessi necessari e avvia il tracking
+    private fun checkPermissionsAndStartTracking() {
+        Log.d("ActivityFragment", "Controllo dei permessi necessari.")
+        val permissionsToRequest = mutableListOf<String>()
+
         if (ContextCompat.checkSelfPermission(
-                requireContext(),
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.d("ActivityFragment", "Permessi di localizzazione già concessi.")
-            startTracking()
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACTIVITY_RECOGNITION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsToRequest.add(Manifest.permission.ACTIVITY_RECOGNITION)
+        }
+        if (ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            Log.d("ActivityFragment", "Richiesta dei seguenti permessi: ${permissionsToRequest.joinToString()}.")
+            requestMultiplePermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
-            Log.d("ActivityFragment", "Richiesta dei permessi di localizzazione.")
-            requestPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            Log.d("ActivityFragment", "Tutti i permessi necessari già concessi.")
+            startTracking()
         }
     }
 
