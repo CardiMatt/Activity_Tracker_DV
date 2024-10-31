@@ -26,7 +26,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="YOUR_API_KEY_HERE"/>
+            android:value="AIzaSyBpufPs5KJ9u3BgvwP1TZWxz1WfEctAPwo"/>
 
         <!-- Definisci LoginActivity come punto di ingresso dell'app -->
         <activity
