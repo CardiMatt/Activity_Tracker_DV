@@ -2,113 +2,38 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:padding="16dp">
 
         <!-- KPI Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/total_distance_kpi"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:weightSum="3"
-            android:padding="8dp"
-            android:layout_marginBottom="16dp">
+            android:text="Total Distance"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
 
-            <!-- KPI for Total Distance -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="@drawable/kpi_background">
+        <TextView
+            android:id="@+id/total_time_kpi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total Time"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Distanza Totale"
-                    android:textSize="14sp"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center" />
-
-                <TextView
-                    android:id="@+id/total_distance_kpi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 km"
-                    android:textSize="18sp"
-                    android:textColor="#00E676"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- KPI for Total Time -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="@drawable/kpi_background">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tempo Totale"
-                    android:textSize="14sp"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center" />
-
-                <TextView
-                    android:id="@+id/total_time_kpi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0 h"
-                    android:textSize="18sp"
-                    android:textColor="#FFEB3B"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <!-- KPI for Total Activities -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="@drawable/kpi_background">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Attività Totali"
-                    android:textSize="14sp"
-                    android:textColor="#FFFFFF"
-                    android:gravity="center" />
-
-                <TextView
-                    android:id="@+id/total_activities_kpi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="18sp"
-                    android:textColor="#FF5722"
-                    android:gravity="center"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/total_activities_kpi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total Activities"
+            android:textSize="18sp"
+            android:layout_marginBottom="16dp" />
 
         <!-- Map Section -->
         <com.google.android.gms.maps.MapView
@@ -117,33 +42,34 @@
             android:layout_height="200dp"
             android:layout_marginBottom="16dp" />
 
-        <!-- Chart Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Distribuzione delle Attività"
-            android:textSize="16sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Pie Chart Section -->
         <com.github.mikephil.charting.charts.PieChart
             android:id="@+id/pie_chart"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="300dp"
             android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tempo Totale per Attività"
-            android:textSize="16sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp" />
-
+        <!-- Bar Chart Section -->
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/bar_chart"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="300dp"
             android:layout_marginBottom="16dp" />
+
+        <!-- Time Filter Section -->
+        <Spinner
+            android:id="@+id/time_filter_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:entries="@array/time_filter_options" />
+
+        <!-- Stacked Bar Chart Section (New Temporal Chart) -->
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/temporal_bar_chart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginBottom="16dp" />
+
     </LinearLayout>
 </ScrollView>

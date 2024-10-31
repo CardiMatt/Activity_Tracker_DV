@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Activity_Tracker_DV</string>
+    <string-array name="time_filter_options">
+        <item>Giornaliero</item>
+        <item>Settimanale</item>
+        <item>Orario</item>
+    </string-array>
 </resources>

@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.activity_tracker_dv.R
@@ -17,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.example.activity_tracker_dv.viewmodels.EventViewModel
@@ -26,6 +29,9 @@ import com.example.activity_tracker_dv.repository.EventRepository
 import com.example.activity_tracker_dv.viewmodels.EventViewModelFactory
 import com.example.activity_tracker_dv.models.Event
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class StatisticsFragment : Fragment(), OnMapReadyCallback {
@@ -33,9 +39,11 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     private lateinit var mapView: MapView
     private lateinit var pieChart: PieChart
     private lateinit var barChart: BarChart
+    private lateinit var temporalBarChart: BarChart
     private lateinit var totalDistanceKpi: TextView
     private lateinit var totalTimeKpi: TextView
     private lateinit var totalActivitiesKpi: TextView
+    private lateinit var timeFilterSpinner: Spinner
     private lateinit var eventViewModel: EventViewModel
 
     override fun onCreateView(
@@ -57,41 +65,66 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
 
         pieChart = view.findViewById(R.id.pie_chart)
         barChart = view.findViewById(R.id.bar_chart)
+        temporalBarChart = view.findViewById(R.id.temporal_bar_chart)
         totalDistanceKpi = view.findViewById(R.id.total_distance_kpi)
         totalTimeKpi = view.findViewById(R.id.total_time_kpi)
         totalActivitiesKpi = view.findViewById(R.id.total_activities_kpi)
+        timeFilterSpinner = view.findViewById(R.id.time_filter_spinner)
 
         setupStatistics()
+
+        // Setup listener per il filtro temporale
+        timeFilterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                val selectedFilter = parent.getItemAtPosition(position).toString()
+                setupTemporalChart(selectedFilter)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
 
         return view
     }
 
     private fun setupStatistics() {
-        eventViewModel.getAllEvents().observe(viewLifecycleOwner) { events ->
-            if (events.isNotEmpty()) {
-                // Calcolo dei KPI
-                val totalDistance = events.sumOf { it.distanceTravelled }
-                val totalTime = events.sumOf { TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time).toDouble() }
-                val totalActivities = events.size
+        // Recupera l'utente attualmente autenticato
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        currentUser?.let { user ->
+            val userUsername = user.email ?: "Unknown"
 
-                // Imposta i KPI nella UI
-                totalDistanceKpi.text = "%.2f km".format(totalDistance)
-                totalTimeKpi.text = "${totalTime.toInt()} min"
-                totalActivitiesKpi.text = "$totalActivities"
+            // Ottiene gli eventi solo per l'utente autenticato
+            eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
+                if (events.isNotEmpty()) {
+                    // Calcolo dei KPI
+                    val totalDistance = events.sumOf { it.distanceTravelled }
+                    val totalTimeInMillis = events.sumOf { it.end.time - it.launch.time }
+                    val totalActivities = events.size
 
-                // Configura il grafico a torta
-                setupPieChart(events)
+                    val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(totalTimeInMillis)
+                    val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(totalTimeInMillis) % 60
 
-                // Configura il grafico a colonne
-                setupBarChart(events)
-            } else {
-                // Se non ci sono eventi, svuota i grafici e KPI
-                totalDistanceKpi.text = "0.00 km"
-                totalTimeKpi.text = "0 min"
-                totalActivitiesKpi.text = "0"
-                pieChart.clear()
-                barChart.clear()
+                    // Imposta i KPI nella UI
+                    totalDistanceKpi.text = "%.2f km".format(totalDistance)
+                    totalTimeKpi.text = "${totalMinutes} min ${remainingSeconds} sec"
+                    totalActivitiesKpi.text = "$totalActivities"
+
+                    // Configura il grafico a torta
+                    setupPieChart(events)
+
+                    // Configura il grafico a colonne
+                    setupBarChart(events)
+                } else {
+                    // Se non ci sono eventi, svuota i grafici e KPI
+                    totalDistanceKpi.text = "0.00 km"
+                    totalTimeKpi.text = "0 min 0 sec"
+                    totalActivitiesKpi.text = "0"
+                    pieChart.clear()
+                    barChart.clear()
+                    temporalBarChart.clear()
+                }
             }
+        } ?: run {
+            Log.e("StatisticsFragment", "Utente non autenticato")
         }
     }
 
@@ -148,20 +181,95 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    override fun onMapReady(googleMap: GoogleMap) {
-        eventViewModel.getAllEvents().observe(viewLifecycleOwner) { events ->
-            googleMap.clear() // Clear previous markers
-            if (events.isNotEmpty()) {
-                events.forEach { event ->
-                    val startLatLng = LatLng(event.startLatitude, event.startLongitude)
-                    googleMap.addMarker(MarkerOptions().position(startLatLng).title("Inizio: ${event.eventType}"))
-                    val endLatLng = LatLng(event.endLatitude, event.endLongitude)
-                    googleMap.addMarker(MarkerOptions().position(endLatLng).title("Fine: ${event.eventType}"))
+    private fun setupTemporalChart(selectedFilter: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        currentUser?.let { user ->
+            val userUsername = user.email ?: "Unknown"
+
+            eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
+                if (events.isNotEmpty()) {
+                    // Filtra gli eventi in base al periodo selezionato
+                    val filteredEvents = when (selectedFilter) {
+                        "Giornaliero" -> events.groupBy { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.launch) }
+                        "Settimanale" -> events.groupBy { SimpleDateFormat("ww/yyyy", Locale.getDefault()).format(it.launch) }
+                        "Orario" -> events.groupBy { SimpleDateFormat("HH/dd/MM/yyyy", Locale.getDefault()).format(it.launch) }
+                        else -> emptyMap()
+                    }
+
+                    val barEntries = filteredEvents.keys.mapIndexed { index, key ->
+                        val totalTime = filteredEvents[key]?.sumOf { it.end.time - it.launch.time } ?: 0L
+                        BarEntry(index.toFloat(), TimeUnit.MILLISECONDS.toHours(totalTime).toFloat())
+                    }
+
+                    val barDataSet = BarDataSet(barEntries, "Attività per ${selectedFilter}").apply {
+                        colors = ColorTemplate.COLORFUL_COLORS.toList()
+                        valueTextColor = Color.WHITE
+                        valueTextSize = 10f
+                    }
+
+                    val barData = BarData(barDataSet)
+
+                    temporalBarChart.apply {
+                        data = barData
+                        setBackgroundColor(Color.DKGRAY)
+                        description.isEnabled = false
+                        xAxis.apply {
+                            textColor = Color.WHITE
+                            valueFormatter = IndexAxisValueFormatter(filteredEvents.keys.toList())
+                            granularity = 1f
+                        }
+                        axisLeft.textColor = Color.WHITE
+                        axisRight.isEnabled = false
+                        legend.textColor = Color.WHITE
+                        setFitBars(true)
+                        animateY(1000)
+                        invalidate()
+                    }
+                } else {
+                    temporalBarChart.clear()
                 }
-                val firstEvent = events.first()
-                val firstLatLng = LatLng(firstEvent.startLatitude, firstEvent.startLongitude)
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(firstLatLng, 12f))
             }
+        }
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        currentUser?.let { user ->
+            val userUsername = user.email ?: "Unknown"
+
+            eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
+                googleMap.clear()
+                if (events.isNotEmpty()) {
+                    events.forEach { event ->
+                        val startLatLng = LatLng(event.startLatitude, event.startLongitude)
+                        googleMap.addMarker(
+                            MarkerOptions()
+                                .position(startLatLng)
+                                .title("Inizio: ${event.eventType} - ${event.id}")
+                                .icon(BitmapDescriptorFactory.defaultMarker(getMarkerColor(event.eventType)))
+                        )
+
+                        val endLatLng = LatLng(event.endLatitude, event.endLongitude)
+                        googleMap.addMarker(
+                            MarkerOptions()
+                                .position(endLatLng)
+                                .title("Fine: ${event.eventType} - ${event.id}")
+                                .icon(BitmapDescriptorFactory.defaultMarker(getMarkerColor(event.eventType)))
+                        )
+                    }
+                    val firstEvent = events.first()
+                    val firstLatLng = LatLng(firstEvent.startLatitude, firstEvent.startLongitude)
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(firstLatLng, 12f))
+                }
+            }
+        }
+    }
+
+    private fun getMarkerColor(eventType: String): Float {
+        return when (eventType) {
+            "Camminata" -> BitmapDescriptorFactory.HUE_BLUE
+            "Corsa" -> BitmapDescriptorFactory.HUE_RED
+            else -> BitmapDescriptorFactory.HUE_GREEN
         }
     }
 
