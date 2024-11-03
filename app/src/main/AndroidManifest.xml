@@ -4,6 +4,7 @@
     package="com.example.activity_tracker_dv">
 
     <!-- Permessi necessari -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
@@ -12,6 +13,7 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -54,12 +56,29 @@
             android:exported="false"
             android:foregroundServiceType="location" />
 
+        <service
+            android:name=".services.DailyNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+
         <!-- Firebase configuration (in caso usi Firebase, altrimenti puoi rimuovere) -->
         <meta-data
             android:name="com.google.firebase.analytics.APPLICATION_ID"
             android:value="@string/google_app_id" />
 
         <receiver android:name=".services.EventRecognitionReceiver" />
+        <receiver android:name=".services.ReminderNotificationReceiver" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.activity_tracker_dv.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
     </application>
 
 </manifest>
