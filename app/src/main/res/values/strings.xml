@@ -1,8 +1,16 @@
 <resources>
     <string name="app_name">Activity_Tracker_DV</string>
+    <!-- Metric Options for Statistics Spinner -->
+    <string-array name="metric_options">
+        <item>Numero Attività</item>
+        <item>Tempo Attività</item>
+        <item>Distanza</item>
+        <item>Passi</item>
+    </string-array>
+
+    <!-- Time Filter Options for Temporal Chart Spinner -->
     <string-array name="time_filter_options">
         <item>Giornaliero</item>
         <item>Settimanale</item>
-        <item>Orario</item>
     </string-array>
 </resources>

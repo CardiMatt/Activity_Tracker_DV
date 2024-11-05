@@ -43,6 +43,7 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     private lateinit var totalDistanceKpi: TextView
     private lateinit var totalTimeKpi: TextView
     private lateinit var totalActivitiesKpi: TextView
+    private lateinit var metricSpinner: Spinner
     private lateinit var timeFilterSpinner: Spinner
     private lateinit var eventViewModel: EventViewModel
 
@@ -69,9 +70,21 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
         totalDistanceKpi = view.findViewById(R.id.total_distance_kpi)
         totalTimeKpi = view.findViewById(R.id.total_time_kpi)
         totalActivitiesKpi = view.findViewById(R.id.total_activities_kpi)
+        metricSpinner = view.findViewById(R.id.metric_spinner)
         timeFilterSpinner = view.findViewById(R.id.time_filter_spinner)
 
         setupStatistics()
+
+        // Setup listener per il cambio della metrica nel grafico
+        metricSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                setupStatistics() // Aggiorna le statistiche in base alla metrica selezionata
+                val selectedFilter = timeFilterSpinner.selectedItem.toString()
+                setupTemporalChart(selectedFilter) // Aggiorna anche il grafico temporale
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
 
         // Setup listener per il filtro temporale
         timeFilterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -95,10 +108,11 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
             // Ottiene gli eventi solo per l'utente autenticato
             eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
                 if (events.isNotEmpty()) {
-                    // Calcolo dei KPI
+                    // Calcola i KPI
                     val totalDistance = events.sumOf { it.distanceTravelled }
                     val totalTimeInMillis = events.sumOf { it.end.time - it.launch.time }
                     val totalActivities = events.size
+                    val totalSteps = events.sumOf { it.steps }
 
                     val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(totalTimeInMillis)
                     val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(totalTimeInMillis) % 60
@@ -129,11 +143,22 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupPieChart(events: List<Event>) {
-        val activityTypeCount = events.groupBy { it.eventType }.mapValues { it.value.size }
-        val pieEntries = activityTypeCount.map { PieEntry(it.value.toFloat(), it.key) }
+        val selectedMetric = metricSpinner.selectedItem.toString()
+        val dataMap = when (selectedMetric) {
+            "Numero Attività" -> events.groupBy { it.eventType }.mapValues { it.value.size }
+            "Tempo Attività" -> events.groupBy { it.eventType }.mapValues { entry ->
+                entry.value.sumOf { (TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time) +
+                        TimeUnit.MILLISECONDS.toSeconds(it.end.time - it.launch.time) % 60 / 60.0).toDouble() }.toFloat()
+            }
+            "Distanza" -> events.groupBy { it.eventType }.mapValues { it.value.sumOf { it.distanceTravelled } }
+            "Passi" -> events.groupBy { it.eventType }.mapValues { it.value.sumOf { it.steps }.toFloat() }
+            else -> emptyMap()
+        }
+
+        val pieEntries = dataMap.map { PieEntry(it.value.toFloat(), it.key) }
 
         val pieDataSet = PieDataSet(pieEntries, "Tipo di Attività").apply {
-            colors = ColorTemplate.MATERIAL_COLORS.toList()
+            colors = events.groupBy { it.eventType }.keys.map { getColorFromMarker(it) }
             valueTextColor = Color.WHITE
             valueTextSize = 12f
         }
@@ -151,13 +176,21 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupBarChart(events: List<Event>) {
-        val activityTimeData = events.groupBy { it.eventType }
-            .mapValues { entry ->
-                entry.value.sumOf { (TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time) + TimeUnit.MILLISECONDS.toSeconds(it.end.time - it.launch.time) % 60 / 60.0).toDouble() }.toFloat()
+        val selectedMetric = metricSpinner.selectedItem.toString()
+        val dataMap = when (selectedMetric) {
+            "Numero Attività" -> events.groupBy { it.eventType }.mapValues { it.value.size.toFloat() }
+            "Tempo Attività" -> events.groupBy { it.eventType }.mapValues { entry ->
+                entry.value.sumOf { (TimeUnit.MILLISECONDS.toMinutes(it.end.time - it.launch.time) +
+                        TimeUnit.MILLISECONDS.toSeconds(it.end.time - it.launch.time) % 60 / 60.0).toDouble() }.toFloat()
             }
-        val barEntries = activityTimeData.keys.mapIndexed { index, key -> BarEntry(index.toFloat(), activityTimeData[key] ?: 0f) }
-        val barDataSet = BarDataSet(barEntries, "Tempo per Attività").apply {
-            colors = ColorTemplate.COLORFUL_COLORS.toList()
+            "Distanza" -> events.groupBy { it.eventType }.mapValues { it.value.sumOf { it.distanceTravelled }.toFloat() }
+            "Passi" -> events.groupBy { it.eventType }.mapValues { it.value.sumOf { it.steps }.toFloat() }
+            else -> emptyMap()
+        }
+
+        val barEntries = dataMap.keys.mapIndexed { index, key -> BarEntry(index.toFloat(), dataMap[key] ?: 0f) }
+        val barDataSet = BarDataSet(barEntries, "${selectedMetric} per Tipo di Attività").apply {
+            colors = events.groupBy { it.eventType }.keys.map { getColorFromMarker(it) }
             valueTextColor = Color.WHITE
             valueTextSize = 10f
         }
@@ -169,7 +202,7 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
             description.isEnabled = false
             xAxis.apply {
                 textColor = Color.WHITE
-                valueFormatter = IndexAxisValueFormatter(activityTimeData.keys.toList())
+                valueFormatter = IndexAxisValueFormatter(dataMap.keys.toList())
                 granularity = 1f
             }
             axisLeft.textColor = Color.WHITE
@@ -192,19 +225,45 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                     val filteredEvents = when (selectedFilter) {
                         "Giornaliero" -> events.groupBy { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.launch) }
                         "Settimanale" -> events.groupBy { SimpleDateFormat("ww/yyyy", Locale.getDefault()).format(it.launch) }
-                        "Orario" -> events.groupBy { SimpleDateFormat("HH/dd/MM/yyyy", Locale.getDefault()).format(it.launch) }
                         else -> emptyMap()
                     }
 
-                    val barEntries = filteredEvents.keys.mapIndexed { index, key ->
-                        val totalTime = filteredEvents[key]?.sumOf { it.end.time - it.launch.time } ?: 0L
-                        val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(totalTime)
-                        val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(totalTime) % 60
-                        BarEntry(index.toFloat(), totalMinutes + (remainingSeconds / 60.0).toFloat())
+                    val selectedMetric = metricSpinner.selectedItem.toString()
+                    val barEntries = mutableListOf<BarEntry>()
+                    val activityTypes = events.groupBy { it.eventType }.keys.toList()
+                    val stackedValues = mutableMapOf<String, MutableList<Float>>()
+
+                    // Inizializza le liste di valori per ogni tipo di attività
+                    activityTypes.forEach { activityType ->
+                        stackedValues[activityType] = MutableList(filteredEvents.size) { 0f }
+                    }
+
+                    filteredEvents.keys.forEachIndexed { index, key ->
+                        activityTypes.forEach { activityType ->
+                            val totalValue = when (selectedMetric) {
+                                "Numero Attività" -> filteredEvents[key]?.filter { it.eventType == activityType }?.size?.toFloat() ?: 0f
+                                "Tempo Attività" -> filteredEvents[key]?.filter { it.eventType == activityType }?.sumOf { it.end.time - it.launch.time }?.let { totalTime ->
+                                    TimeUnit.MILLISECONDS.toMinutes(totalTime) + (TimeUnit.MILLISECONDS.toSeconds(totalTime) % 60) / 60.0f
+                                } ?: 0f
+                                "Distanza" -> filteredEvents[key]?.filter { it.eventType == activityType }?.sumOf { it.distanceTravelled }?.toFloat() ?: 0f
+                                "Passi" -> filteredEvents[key]?.filter { it.eventType == activityType }?.sumOf { it.steps }?.toFloat() ?: 0f
+                                else -> 0f
+                            }
+                            stackedValues[activityType]?.set(index, totalValue)
+                        }
+                    }
+
+                    filteredEvents.keys.forEachIndexed { index, key ->
+                        val values = activityTypes.map { activityType ->
+                            stackedValues[activityType]?.get(index) ?: 0f
+                        }.toFloatArray()
+                        if (values.isNotEmpty()) { // Check to avoid ArrayIndexOutOfBoundsException
+                            barEntries.add(BarEntry(index.toFloat(), values))
+                        }
                     }
 
                     val barDataSet = BarDataSet(barEntries, "Attività per ${selectedFilter}").apply {
-                        colors = ColorTemplate.COLORFUL_COLORS.toList()
+                        colors = activityTypes.map { getColorFromMarker(it) }
                         valueTextColor = Color.WHITE
                         valueTextSize = 10f
                     }
@@ -223,7 +282,6 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                         axisLeft.textColor = Color.WHITE
                         axisRight.isEnabled = false
                         legend.textColor = Color.WHITE
-                        setFitBars(true)
                         animateY(1000)
                         invalidate()
                     }
@@ -269,9 +327,21 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
 
     private fun getMarkerColor(eventType: String): Float {
         return when (eventType) {
-            "Camminata" -> BitmapDescriptorFactory.HUE_BLUE
+            "Camminata" -> BitmapDescriptorFactory.HUE_GREEN
             "Corsa" -> BitmapDescriptorFactory.HUE_RED
-            else -> BitmapDescriptorFactory.HUE_GREEN
+            "Bicicletta" -> BitmapDescriptorFactory.HUE_ORANGE
+            "Automobile" -> BitmapDescriptorFactory.HUE_MAGENTA
+            else -> BitmapDescriptorFactory.HUE_YELLOW
+        }
+    }
+
+    private fun getColorFromMarker(eventType: String): Int {
+        return when (eventType) {
+            "Camminata" -> Color.GREEN
+            "Corsa" -> Color.RED
+            "Bicicletta" -> Color.parseColor("#FFA500") // Orange
+            "Automobile" -> Color.MAGENTA
+            else -> Color.YELLOW
         }
     }
 
