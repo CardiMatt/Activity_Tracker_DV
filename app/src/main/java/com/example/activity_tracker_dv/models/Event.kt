@@ -10,6 +10,7 @@ data class Event(
     val userUsername: String = "",
     val eventType: String = "",
     var distanceTravelled: Double = 0.0,
+    var steps: Int = 0,
     val launch: Date = Date(),
     var end: Date = Date(),
     val startLatitude: Double = 0.0,

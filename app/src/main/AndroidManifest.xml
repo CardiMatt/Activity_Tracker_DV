@@ -66,8 +66,10 @@
             android:name="com.google.firebase.analytics.APPLICATION_ID"
             android:value="@string/google_app_id" />
 
-        <receiver android:name=".services.EventRecognitionReceiver" />
-        <receiver android:name=".services.ReminderNotificationReceiver" />
+        <receiver android:name=".services.EventRecognitionReceiver"
+            android:exported="false" />
+        <receiver android:name=".services.ReminderNotificationReceiver"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

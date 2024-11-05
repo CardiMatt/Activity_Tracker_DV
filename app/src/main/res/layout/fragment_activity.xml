@@ -14,6 +14,15 @@
         android:textSize="18sp"
         android:layout_marginBottom="16dp" />
 
+    <!-- Aggiunta del TextView per i passi -->
+    <TextView
+        android:id="@+id/steps_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Passi: 0"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp" />
+
     <Button
         android:id="@+id/start_button"
         android:layout_width="match_parent"
