@@ -1,5 +1,6 @@
 package com.example.activity_tracker_dv.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -36,6 +37,7 @@ class EventViewModel(private val repository: EventRepository) : ViewModel() {
 
     // Funzione per impostare il currentEvent
     fun setCurrentEvent(event: Event?) {
+        Log.d("EvemtViewModel", "setCurrentEvent chiamato con: $event")
         _currentEvent.postValue(event)
     }
 

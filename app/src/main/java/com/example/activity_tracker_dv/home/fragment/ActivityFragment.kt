@@ -24,12 +24,16 @@ import com.example.activity_tracker_dv.repository.EventRepository
 import com.example.activity_tracker_dv.data.AppDatabase
 import com.google.firebase.auth.FirebaseAuth
 import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 class ActivityFragment : Fragment() {
 
     private lateinit var activityTextView: TextView
-    private lateinit var stepsTextView: TextView  // Nuovo TextView per il conteggio dei passi
+    private lateinit var currentEventTextView: TextView
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var eventViewModel: EventViewModel
@@ -65,7 +69,7 @@ class ActivityFragment : Fragment() {
             rootView = inflater.inflate(R.layout.fragment_activity, container, false)
 
             activityTextView = rootView!!.findViewById(R.id.activity_text)
-            stepsTextView = rootView!!.findViewById(R.id.steps_text)  // Inizializzazione del nuovo TextView
+            currentEventTextView = rootView!!.findViewById(R.id.currentEventTextView)
             startButton = rootView!!.findViewById(R.id.start_button)
             stopButton = rootView!!.findViewById(R.id.stop_button)
             previousActivitiesListView = rootView!!.findViewById(R.id.previous_activities_list)
@@ -87,30 +91,42 @@ class ActivityFragment : Fragment() {
                 if (events.isNotEmpty()) {
                     val eventDescriptions = events.map { event ->
                         val formattedDistance = String.format(Locale.getDefault(), "%.3f", event.distanceTravelled)
-                        "Attività: ${event.eventType}, Inizio: ${event.launch}, Fine: ${event.end}, Distanza: ${formattedDistance} km, Passi: ${event.steps}"
+                        val formattedLaunch = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(event.launch)
+                        val formattedEnd = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(event.end)
+                        "Attività: ${event.eventType}\n" +
+                        " Inizio: ${formattedLaunch}\n" +
+                        " Fine: ${formattedEnd}\n" +
+                        " Distanza: ${formattedDistance} km\n" +
+                        " Passi: ${event.steps}"
                     }
                     eventsAdapter.clear()
                     eventsAdapter.addAll(eventDescriptions)
                     eventsAdapter.notifyDataSetChanged()
                 } else {
                     activityTextView.text = "Nessuna attività registrata"
-                    stepsTextView.text = "Passi: 0"
                     Log.d("ActivityFragment", "Nessuna attività registrata.")
                 }
             })
 
-            // Osserva i cambiamenti dell'evento corrente per aggiornare l'UI sopra i pulsanti
-            eventViewModel.currentEvent.observe(viewLifecycleOwner, Observer { currentEvent ->
-                currentEvent?.let {
-                    val formattedDistance = String.format(Locale.getDefault(), "%.3f", currentEvent.distanceTravelled)
-                    activityTextView.text = "Attività: ${currentEvent.eventType}, Distanza: ${formattedDistance} km"
-                    stepsTextView.text = "Passi: ${currentEvent.steps}"
-                    Log.d("ActivityFragment", "Evento corrente: ${currentEvent.eventType}, Distanza: ${formattedDistance} km, Passi: ${currentEvent.steps}")
-                } ?: run {
-                    activityTextView.text = "Nessuna attività corrente"
-                    stepsTextView.text = "Passi: 0"
+            eventViewModel.currentEvent.observe(viewLifecycleOwner) { event ->
+                Log.d("ActivityFragment", "Osservando l'evento corrente")
+                if (event != null) {
+                    val formattedLaunch = SimpleDateFormat(
+                        "dd/MM/yyyy HH:mm",
+                        Locale.getDefault()
+                    ).format(event.launch)
+                    val formattedDistance =
+                        String.format(Locale.getDefault(), "%.3f", event.distanceTravelled)
+                    currentEventTextView.text = "Attività: ${event.eventType}\n" +
+                            " Inizio: $formattedLaunch\n" +
+                            " Distanza: ${formattedDistance} km\n" +
+                            " Passi: ${event.steps}"
+                } else {
+                    // Puoi nascondere o mostrare un messaggio di default quando non c'è un evento
+                    currentEventTextView.text = "Nessun evento corrente disponibile."
                 }
-            })
+            }
+
 
             startButton.setOnClickListener {
                 Log.d("ActivityFragment", "Pulsante Start cliccato.")
@@ -131,6 +147,7 @@ class ActivityFragment : Fragment() {
         Log.d("ActivityFragment", "Controllo dei permessi necessari.")
         val permissionsToRequest = mutableListOf<String>()
 
+        // Verifica se i permessi necessari sono stati concessi
         if (ContextCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
@@ -150,10 +167,12 @@ class ActivityFragment : Fragment() {
             permissionsToRequest.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
 
+        // Se ci sono permessi mancanti, richiedili
         if (permissionsToRequest.isNotEmpty()) {
             Log.d("ActivityFragment", "Richiesta dei seguenti permessi: ${permissionsToRequest.joinToString()}.")
             requestMultiplePermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
+            // Se tutti i permessi sono già concessi, avvia il tracciamento
             Log.d("ActivityFragment", "Tutti i permessi necessari già concessi.")
             startTracking()
         }
@@ -162,9 +181,9 @@ class ActivityFragment : Fragment() {
     private fun startTracking() {
         Log.d("ActivityFragment", "Avvio del monitoraggio delle attività.")
         val intent = Intent(requireContext(), ActivityTrackingService::class.java)
+        ActivityTrackingService.setViewModel(eventViewModel)
         requireContext().startService(intent)
         activityTextView.text = "Monitoraggio attività avviato."
-        stepsTextView.text = "Passi: 0"  // Reset dei passi all'inizio del tracking
         Log.d("ActivityFragment", "Monitoraggio attività avviato.")
     }
 
@@ -173,7 +192,6 @@ class ActivityFragment : Fragment() {
         val intent = Intent(requireContext(), ActivityTrackingService::class.java)
         requireContext().stopService(intent)
         activityTextView.text = "Monitoraggio attività fermato."
-        stepsTextView.text = "Passi: 0"
         Log.d("ActivityFragment", "Monitoraggio attività fermato.")
     }
 }

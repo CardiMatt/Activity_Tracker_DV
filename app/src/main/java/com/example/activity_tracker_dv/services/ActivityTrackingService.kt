@@ -9,10 +9,11 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.activity_tracker_dv.R
+import com.example.activity_tracker_dv.home.HomeActivity
+import com.example.activity_tracker_dv.home.fragment.ActivityFragment
+import com.example.activity_tracker_dv.viewmodels.EventViewModel
 
 class ActivityTrackingService : Service() {
-
-    private var isRunning: Boolean? = false
 
     override fun onCreate() {
         super.onCreate()
@@ -21,11 +22,19 @@ class ActivityTrackingService : Service() {
         startForegroundNotification()
     }
 
+    private fun findFragmentInstance(): ActivityFragment? {
+        // Troviamo l'istanza di ActivityFragment utilizzando il FragmentManager della HomeActivity
+        val fragmentManager = (applicationContext as? HomeActivity)?.supportFragmentManager
+        return fragmentManager?.findFragmentByTag("activity_fragment") as? ActivityFragment
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("ActivityTrackingService", "Avvio del monitoraggio delle attività e della posizione")
-
-        // Avvia il monitoraggio delle attività utilizzando il BroadcastReceiver
-        EventRecognitionReceiver.startActivityTransitionUpdates(applicationContext)
+        eventViewModel?.let {
+            EventRecognitionReceiver.startActivityTransitionUpdates(applicationContext,
+                it
+            )
+        }
 
         return START_STICKY
     }
@@ -65,5 +74,10 @@ class ActivityTrackingService : Service() {
     companion object {
         const val CHANNEL_ID = "ActivityTrackingChannel"
         const val NOTIFICATION_ID = 2
+        private var eventViewModel: EventViewModel? = null
+
+        fun setViewModel(viewModel: EventViewModel) {
+            eventViewModel = viewModel
+        }
     }
 }

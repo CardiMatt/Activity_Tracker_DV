@@ -10,18 +10,17 @@
         android:id="@+id/activity_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Attività corrente: Nessuna"
+        android:text="Monitoraggio attività spento"
         android:textSize="18sp"
         android:layout_marginBottom="16dp" />
 
-    <!-- Aggiunta del TextView per i passi -->
     <TextView
-        android:id="@+id/steps_text"
-        android:layout_width="wrap_content"
+        android:id="@+id/currentEventTextView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Passi: 0"
-        android:textSize="18sp"
-        android:layout_marginBottom="16dp" />
+        android:padding="16dp"
+        android:textSize="16sp"
+        android:text="Nessun evento corrente disponibile." />
 
     <Button
         android:id="@+id/start_button"

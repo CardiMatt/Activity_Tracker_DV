@@ -26,6 +26,8 @@ import com.example.activity_tracker_dv.viewmodels.EventViewModel
 import com.example.activity_tracker_dv.viewmodels.EventViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.util.Date
 
 class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
@@ -33,23 +35,6 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
     private var userEmail: String? = null
 
     companion object {
-        private val stepListener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-                    if (initialStepCount == 0) {
-                        initialStepCount = event.values[0].toInt()
-                    }
-                    totalSteps = event.values[0].toInt() - initialStepCount
-                    eventViewModel.currentEvent.value?.let {
-                        it.steps = totalSteps
-                        eventViewModel.setCurrentEvent(it)  // Riassegna per notificare i cambiamenti
-                    }
-                    //Log.d(TAG, "Conteggio passi attuale: $totalSteps")
-                }
-            }
-
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
         private const val TAG = "EventTransitionReceiver"
 
         private lateinit var activityRecognitionClient: ActivityRecognitionClient
@@ -66,13 +51,25 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
         var startTimeMillis: Long = 0
         private var initialStepCount = 0
 
-        fun startActivityTransitionUpdates(context: Context) {
+        private val stepListener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+                    if (initialStepCount == 0) {
+                        initialStepCount = event.values[0].toInt()
+                    }
+                    totalSteps = event.values[0].toInt() - initialStepCount
+                    updateCurrentEventSteps(totalSteps)
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        fun startActivityTransitionUpdates(context: Context, eventViewModel: EventViewModel) {
             Log.d(TAG, "startActivityTransitionUpdates called")
 
-            val eventDao = AppDatabase.getDatabase(context).eventDao()
-            eventRepository = EventRepository(eventDao)
-            val factory = EventViewModelFactory(eventRepository)
-            eventViewModel = ViewModelProvider(viewModelStore, factory)[EventViewModel::class.java]
+
+            this.eventViewModel = eventViewModel
 
             activityRecognitionClient = ActivityRecognition.getClient(context)
 
@@ -216,24 +213,29 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
 
         private val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
-                Log.d(TAG, "locationCallback - onLocationResult called with ${locationResult.locations.size} locations")
                 if (locationResult.locations.isNotEmpty()) {
                     val location = locationResult.locations.last()
-                    Log.d(TAG, "Nuova posizione ricevuta: lat=${location.latitude}, lon=${location.longitude}")
                     lastLocation?.let {
                         val distance = it.distanceTo(location) / 1000 // in km
                         totalDistance += distance
-                        // Aggiorna il currentEvent con la distanza attuale
-                        eventViewModel.currentEvent.value?.let { currentEvent ->
-                            currentEvent.distanceTravelled = totalDistance
-                            eventViewModel.setCurrentEvent(currentEvent)  // Riassegna per notificare i cambiamenti
-                        }
-                        Log.d(TAG, "Distanza attuale percorsa: $totalDistance km")
+                        updateCurrentEventDistance(totalDistance)
                     }
                     lastLocation = location
-                } else {
-                    Log.w(TAG, "Nessuna posizione trovata nell'aggiornamento della posizione.")
                 }
+            }
+        }
+
+        private fun updateCurrentEventDistance(distance: Double) {
+            eventViewModel.currentEvent.value?.let { currentEvent ->
+                currentEvent.distanceTravelled = distance
+                eventViewModel.setCurrentEvent(currentEvent)  // Riassegna per notificare i cambiamenti
+            }
+        }
+
+        private fun updateCurrentEventSteps(steps: Int) {
+            eventViewModel.currentEvent.value?.let {
+                it.steps = steps
+                eventViewModel.setCurrentEvent(it)  // Riassegna per notificare i cambiamenti
             }
         }
     }
@@ -304,8 +306,10 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
                         it.endLongitude = lastLocation?.longitude ?: 0.0
                         Log.d(TAG, "Evento aggiornato: $it")
 
-                        val eventId = eventViewModel.insertEvent(it)
-                        Log.d(TAG, "Evento Salvato: $eventId")
+                        launch(Dispatchers.IO) {
+                            val eventId = eventViewModel.insertEvent(it)
+                            Log.d(TAG, "Evento Salvato: $eventId")
+                        }
                         eventViewModel.setCurrentEvent(null)  // Reset currentEvent after saving
                     } ?: run {
                         Log.e(TAG, "Tentativo di concludere un'attività non avviata. Evento nullo.")
@@ -324,10 +328,7 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
                 initialStepCount = event.values[0].toInt()
             }
             totalSteps = event.values[0].toInt() - initialStepCount
-            eventViewModel.currentEvent.value?.let {
-                it.steps = totalSteps
-            }
-            //Log.d(TAG, "Conteggio passi attuale: $totalSteps")
+            updateCurrentEventSteps(totalSteps)
         }
     }
 
