@@ -18,14 +18,8 @@ class ActivityTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d("ActivityTrackingService", "Service creato")
-        createNotificationChannel() // Creiamo il canale di notifica
+        createNotificationChannel()
         startForegroundNotification()
-    }
-
-    private fun findFragmentInstance(): ActivityFragment? {
-        // Troviamo l'istanza di ActivityFragment utilizzando il FragmentManager della HomeActivity
-        val fragmentManager = (applicationContext as? HomeActivity)?.supportFragmentManager
-        return fragmentManager?.findFragmentByTag("activity_fragment") as? ActivityFragment
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
