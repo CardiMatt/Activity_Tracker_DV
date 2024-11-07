@@ -1,38 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:gravity="center">
+    android:fillViewport="true">
 
-    <Button
-        android:id="@+id/button_sync_database"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sincronizza Database"
-        android:layout_marginBottom="16dp" />
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="center">
 
-    <Button
-        android:id="@+id/button_set_notification"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Imposta Notifica Giornaliera"
-        android:layout_marginBottom="16dp" />
+        <!-- Buttons preesistenti -->
+        <Button
+            android:id="@+id/button_sync_database"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sincronizza Database"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/button_export_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Esporta Attività"
-        android:layout_marginBottom="16dp" />
+        <Button
+            android:id="@+id/button_set_notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Imposta Notifica Giornaliera"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/button_logout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logout"
-        android:backgroundTint="@color/design_default_color_error"
-        android:textColor="@android:color/white" />
+        <Button
+            android:id="@+id/button_export_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Esporta Attività"
+            android:layout_marginBottom="16dp" />
 
-</LinearLayout>
+        <Button
+            android:id="@+id/button_logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Logout"
+            android:backgroundTint="@color/design_default_color_error"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Nuovi componenti per la gestione dei follow -->
+        <EditText
+            android:id="@+id/edit_text_follow_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Inserisci email da seguire"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/button_follow_user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Segui"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/text_view_followed_users"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Utenti Seguiti:"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_followed_users"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+</ScrollView>
