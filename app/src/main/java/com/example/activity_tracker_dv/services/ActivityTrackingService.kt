@@ -22,12 +22,6 @@ class ActivityTrackingService : Service() {
         startForegroundNotification()
     }
 
-    private fun findFragmentInstance(): ActivityFragment? {
-        // Troviamo l'istanza di ActivityFragment utilizzando il FragmentManager della HomeActivity
-        val fragmentManager = (applicationContext as? HomeActivity)?.supportFragmentManager
-        return fragmentManager?.findFragmentByTag("activity_fragment") as? ActivityFragment
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("ActivityTrackingService", "Avvio del monitoraggio delle attività e della posizione")
         eventViewModel?.let {
