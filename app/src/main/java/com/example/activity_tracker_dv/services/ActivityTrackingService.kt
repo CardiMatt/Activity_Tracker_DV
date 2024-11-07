@@ -18,7 +18,7 @@ class ActivityTrackingService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d("ActivityTrackingService", "Service creato")
-        createNotificationChannel() // Creiamo il canale di notifica
+        createNotificationChannel()
         startForegroundNotification()
     }
 

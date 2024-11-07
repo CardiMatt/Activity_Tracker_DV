@@ -108,6 +108,7 @@ class ActivityFragment : Fragment() {
                 }
             })
 
+            // Osserva l'evento corrente e aggiorna l'UI
             eventViewModel.currentEvent.observe(viewLifecycleOwner) { event ->
                 Log.d("ActivityFragment", "Osservando l'evento corrente")
                 if (event != null) {
