@@ -171,6 +171,13 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
             initialStepCount = 0
         }
 
+        fun resetStepAndDistanceData() {
+            Log.d(TAG, "resetTrackingData called. Dati resettati.")
+            totalDistance = 0.0
+            totalSteps = 0
+            initialStepCount = 0
+        }
+
         @SuppressLint("MissingPermission")
         fun startLocationUpdates(context: Context) {
             Log.d(TAG, "startLocationUpdates called. Avvio del monitoraggio della posizione")
@@ -273,7 +280,7 @@ class EventRecognitionReceiver : BroadcastReceiver(), SensorEventListener {
 
                 if (event.transitionType == ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
                     Log.d(TAG, "Inizio attività di $activityName")
-                    resetTrackingData()
+                    resetStepAndDistanceData()
                     startTimeMillis = System.currentTimeMillis()
                     Log.d(TAG, "Tempo di inizio registrato: $startTimeMillis")
 
