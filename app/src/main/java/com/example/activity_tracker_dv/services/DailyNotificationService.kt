@@ -30,7 +30,6 @@ class DailyNotificationService : Service() {
         Log.d("DailyNotificationService", "Service creato per promemoria giornaliero")
         createNotificationChannel()
 
-        // Start foreground service with notification
         val notification = createNotification("Promemoria giornaliero in esecuzione")
         startForeground(NOTIFICATION_ID, notification)
     }
@@ -99,7 +98,6 @@ class DailyNotificationService : Service() {
     }
 }
 
-// Receiver per gestire l'invio della notifica giornaliera
 class ReminderNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

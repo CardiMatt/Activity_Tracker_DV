@@ -37,9 +37,8 @@ class RegisterActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(this, "Registration successful. Please log in.", Toast.LENGTH_SHORT).show()
-                    // Redirect to LoginActivity
                     startActivity(Intent(this, LoginActivity::class.java))
-                    finish() // Close RegisterActivity
+                    finish()
                 } else {
                     Toast.makeText(this, "Registration failed.", Toast.LENGTH_SHORT).show()
                 }

@@ -85,7 +85,6 @@ class ActivityFragment : Fragment() {
             val currentUser = FirebaseAuth.getInstance().currentUser
             val userUsername = currentUser?.email ?: ""
 
-            // Osserva i cambiamenti degli eventi salvati per l'utente autenticato e aggiorna l'UI
             eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner, Observer { events ->
                 Log.d("ActivityFragment", "Osservando cambiamenti degli eventi per l'utente: $userUsername.")
                 if (events.isNotEmpty()) {
@@ -168,12 +167,11 @@ class ActivityFragment : Fragment() {
             permissionsToRequest.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         }
 
-        // Se ci sono permessi mancanti, richiedili
         if (permissionsToRequest.isNotEmpty()) {
             Log.d("ActivityFragment", "Richiesta dei seguenti permessi: ${permissionsToRequest.joinToString()}.")
             requestMultiplePermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
-            // Se tutti i permessi sono già concessi, avvia il tracciamento
+
             Log.d("ActivityFragment", "Tutti i permessi necessari già concessi.")
             startTracking()
         }

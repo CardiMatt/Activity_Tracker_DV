@@ -69,19 +69,16 @@ class SettingsFragment : Fragment() {
 
         Log.d("SettingsFragment", "Views initialized")
 
-        // Configure EventViewModel
         val eventDao = AppDatabase.getDatabase(requireContext()).eventDao()
         val eventRepository = EventRepository(eventDao)
         val eventFactory = EventViewModelFactory(eventRepository)
         eventViewModel = ViewModelProvider(this, eventFactory)[EventViewModel::class.java]
 
-        // Configure FollowedViewModel
         val followedDao = AppDatabase.getDatabase(requireContext()).followedDao()
         val followedRepository = FollowedRepository(followedDao)
         val followedFactory = FollowedViewModelFactory(followedRepository)
         followedViewModel = ViewModelProvider(this, followedFactory)[FollowedViewModel::class.java]
 
-        // Setup RecyclerView for followed users
         followedUsersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         val followedUsersAdapter = FollowedUsersAdapter(
             unfollowCallback = { followedUser ->

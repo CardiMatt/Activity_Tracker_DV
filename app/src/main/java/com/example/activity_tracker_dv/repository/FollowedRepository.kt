@@ -20,7 +20,6 @@ class FollowedRepository(private val followedDao: FollowedDao) {
         val currentUserEmail = auth.currentUser?.email ?: return Result.failure(Exception("Utente non autenticato"))
 
         try {
-            // Controlla se esistono eventi associati all'utente da seguire
             val eventsSnapshot = firestore.collection("events")
                 .whereEqualTo("userUsername", followedEmail)
                 .get()

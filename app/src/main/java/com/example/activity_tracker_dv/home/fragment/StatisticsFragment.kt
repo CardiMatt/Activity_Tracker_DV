@@ -53,13 +53,11 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_statistics, container, false)
 
-        // Configura il ViewModel
         val eventDao = AppDatabase.getDatabase(requireContext()).eventDao()
         val repository = EventRepository(eventDao)
         val factory = EventViewModelFactory(repository)
         eventViewModel = ViewModelProvider(this, factory).get(EventViewModel::class.java)
 
-        // Inizializza gli elementi della UI
         mapView = view.findViewById(R.id.map_view)
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
@@ -86,7 +84,6 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
-        // Setup listener per il filtro temporale
         timeFilterSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 val selectedFilter = parent.getItemAtPosition(position).toString()
@@ -100,15 +97,12 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun setupStatistics() {
-        // Recupera l'utente attualmente autenticato
         val currentUser = FirebaseAuth.getInstance().currentUser
         currentUser?.let { user ->
             val userUsername = user.email ?: "Unknown"
 
-            // Ottiene gli eventi solo per l'utente autenticato
             eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
                 if (events.isNotEmpty()) {
-                    // Calcola i KPI
                     val totalDistance = events.sumOf { it.distanceTravelled }
                     val totalTimeInMillis = events.sumOf { it.end.time - it.launch.time }
                     val totalActivities = events.size
@@ -117,18 +111,14 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                     val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(totalTimeInMillis)
                     val remainingSeconds = TimeUnit.MILLISECONDS.toSeconds(totalTimeInMillis) % 60
 
-                    // Imposta i KPI nella UI
                     totalDistanceKpi.text = "%.2f km".format(totalDistance)
                     totalTimeKpi.text = "${totalMinutes} min ${remainingSeconds} sec"
                     totalActivitiesKpi.text = "$totalActivities"
 
-                    // Configura il grafico a torta
                     setupPieChart(events)
 
-                    // Configura il grafico a colonne
                     setupBarChart(events)
                 } else {
-                    // Se non ci sono eventi, svuota i grafici e KPI
                     totalDistanceKpi.text = "0.00 km"
                     totalTimeKpi.text = "0 min 0 sec"
                     totalActivitiesKpi.text = "0"
@@ -221,7 +211,6 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
 
             eventViewModel.getEventsForUser(userUsername).observe(viewLifecycleOwner) { events ->
                 if (events.isNotEmpty()) {
-                    // Filtra gli eventi in base al periodo selezionato
                     val filteredEvents = when (selectedFilter) {
                         "Giornaliero" -> events.groupBy { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.launch) }
                         "Settimanale" -> events.groupBy { SimpleDateFormat("ww/yyyy", Locale.getDefault()).format(it.launch) }
@@ -233,7 +222,6 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                     val activityTypes = events.groupBy { it.eventType }.keys.toList()
                     val stackedValues = mutableMapOf<String, MutableList<Float>>()
 
-                    // Inizializza le liste di valori per ogni tipo di attività
                     activityTypes.forEach { activityType ->
                         stackedValues[activityType] = MutableList(filteredEvents.size) { 0f }
                     }
@@ -257,7 +245,7 @@ class StatisticsFragment : Fragment(), OnMapReadyCallback {
                         val values = activityTypes.map { activityType ->
                             stackedValues[activityType]?.get(index) ?: 0f
                         }.toFloatArray()
-                        if (values.isNotEmpty()) { // Check to avoid ArrayIndexOutOfBoundsException
+                        if (values.isNotEmpty()) {
                             barEntries.add(BarEntry(index.toFloat(), values))
                         }
                     }

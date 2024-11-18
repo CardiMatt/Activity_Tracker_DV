@@ -6,6 +6,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "followed")
 data class Followed(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val user: String,
-    val followed: String
+    val user: String = "default",
+    val followed: String = "default"
 )

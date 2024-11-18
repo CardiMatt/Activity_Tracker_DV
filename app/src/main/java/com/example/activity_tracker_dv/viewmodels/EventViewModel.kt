@@ -11,7 +11,6 @@ import kotlinx.coroutines.launch
 
 class EventViewModel(private val repository: EventRepository) : ViewModel() {
 
-    // Aggiungi currentEvent per mantenere lo stato dell'evento in corso
     private val _currentEvent = MutableLiveData<Event?>()
     val currentEvent: LiveData<Event?> = _currentEvent
 
@@ -35,14 +34,17 @@ class EventViewModel(private val repository: EventRepository) : ViewModel() {
         return repository.getAllEvents()
     }
 
-    // Funzione per impostare il currentEvent
     fun setCurrentEvent(event: Event?) {
         Log.d("EvemtViewModel", "setCurrentEvent chiamato con: $event")
         _currentEvent.postValue(event)
     }
 
-    // Nuovo metodo per ottenere gli eventi per l'utente autenticato
     fun getEventsForUser(userUsername: String): LiveData<List<Event>> {
         return repository.getEventsForUser(userUsername)
     }
+
+    fun getEventsForUserFromFirebase(userUsername: String): LiveData<List<Event>> {
+        return repository.getEventsForUserFromFirebase(userUsername)
+    }
+
 }

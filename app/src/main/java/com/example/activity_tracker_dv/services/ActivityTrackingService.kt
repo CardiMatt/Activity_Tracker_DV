@@ -37,7 +37,7 @@ class ActivityTrackingService : Service() {
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Monitoraggio attività in corso")
             .setContentText("L'app sta monitorando le tue attività fisiche.")
-            .setSmallIcon(R.drawable.stats_18)  // Assicurati che l'icona esista
+            .setSmallIcon(R.drawable.stats_18)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)

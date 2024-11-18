@@ -23,7 +23,6 @@ class HomeActivity : AppCompatActivity() {
 
         navView = findViewById(R.id.nav_view)
 
-        // Verifica se l'attività è stata ricreata e quindi i fragment sono già stati aggiunti
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction().apply {
                 add(R.id.nav_host_fragment_activity_main, settingsFragment, "3").hide(settingsFragment)

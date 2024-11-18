@@ -28,19 +28,15 @@ class KpiDialogFragment(private val followedEmail: String) : DialogFragment() {
             val eventFactory = EventViewModelFactory(eventRepository)
             var eventViewModel = ViewModelProvider(this, eventFactory)[EventViewModel::class.java]
 
-            // Trova le view nel layout del dialog
             val totalActivitiesTextView = view.findViewById<TextView>(R.id.text_view_total_activities)
             val totalDistanceTextView = view.findViewById<TextView>(R.id.text_view_total_distance)
             val totalStepsTextView = view.findViewById<TextView>(R.id.text_view_total_steps)
 
-            // Usa l'EventViewModel per ottenere gli eventi dell'utente seguito
-            eventViewModel.getEventsForUser(followedEmail).observe(this, Observer { events ->
-                // Calcola i KPI
+            eventViewModel.getEventsForUserFromFirebase(followedEmail).observe(this, Observer { events ->
                 val totalActivities = events.size
                 val totalDistance = events.sumOf { it.distanceTravelled }
                 val totalSteps = events.sumOf { it.steps }
 
-                // Aggiorna la UI con i dati calcolati
                 totalActivitiesTextView.text = "Totale Attività: $totalActivities"
                 totalDistanceTextView.text = "Distanza Totale: $totalDistance km"
                 totalStepsTextView.text = "Passi Totali: $totalSteps"

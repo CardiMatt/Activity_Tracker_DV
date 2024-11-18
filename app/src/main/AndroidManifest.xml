@@ -34,7 +34,8 @@
         <activity
             android:name=".login.LoginActivity"
             android:exported="true"
-            android:screenOrientation="sensorPortrait" >
+            android:configChanges="orientation"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -42,10 +43,14 @@
         </activity>
 
         <!-- HomeActivity -->
-        <activity android:name=".home.HomeActivity" />
+        <activity android:name=".home.HomeActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
 
         <!-- RegisterActivity -->
-        <activity android:name=".login.RegisterActivity" />
+        <activity android:name=".login.RegisterActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
 
         <!-- Google Play Services meta-data -->
         <meta-data
